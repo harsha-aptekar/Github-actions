@@ -1,20 +1,18 @@
-
 name: Build WF
 
 on:
   push:
-    branches: 
+    branches:
       - main
 
   pull_request:
     branches:
       - main
 
-
   workflow_dispatch:
 
   schedule:
-    - cron: '20 21 * * *' # Runs every day at 2:50 AM IST
+    - cron: "20 21 * * *" # Runs every day at 2:50 AM IST
 
 permissions:
   contents: read
@@ -26,10 +24,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
         with:
           fetch-depth: 0
-
 
       - name: Maven Build
         run: mvn install
@@ -40,11 +37,9 @@ jobs:
           name: vprolfile-app
           path: target/*.war
 
-      - name: Notifiy if build fails
+      - name: Notify if build fails
         if: failure()
         run: echo "Build failed! Please check the logs for details."
-        
-  
 
   Testing:
     runs-on: ubuntu-latest
@@ -58,7 +53,7 @@ jobs:
           fetch-depth: 0
 
       - name: Maven Test
-        if: github.ref == 'refs/heads/main' 
+        if: github.ref == 'refs/heads/main'
         run: mvn test
 
   Security-Scan:
@@ -77,13 +72,46 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
           format: json
-          output: 'trivy-results.json'
+          output: "trivy-results.json"
 
       - name: Upload Trivy Scan Results
         uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-results
           path: trivy-results.json
+
+  Build-Docker-Image:
+    runs-on: ubuntu-latest
+    needs: [build, Testing, Security-Scan]
+    environment: prod
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+        with:
+          fetch-depth: 0
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f Docker-files/app/multistage/Dockerfile -t $ECR_REGISTRY/vprofileappimg-githubcicd:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/vprofileappimg-githubcicd:$IMAGE_TAG
