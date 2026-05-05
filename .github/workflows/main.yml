@@ -2,13 +2,19 @@
 name: Build WF
 
 on:
-  # push:
-  #   branches: 
-  #     - main
+  push:
+    branches: 
+      - main
 
   pull_request:
     branches:
       - main
+
+
+  workflow_dispatch:
+
+  schedule:
+    - cron: '45 1 * * *' # Runs every day at midnight
 
 jobs:
   build:
