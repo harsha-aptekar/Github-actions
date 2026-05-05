@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '10 2 * * *' # Runs every day at midnight
+    - cron: '20 21 * * *' # Runs every day at 2:50 AM IST
 
 permissions:
   contents: read
