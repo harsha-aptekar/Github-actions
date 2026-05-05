@@ -40,8 +40,12 @@
 name: Build WF
 
 on:
-  push:
-    branches: 
+  # push:
+  #   branches: 
+  #     - main
+
+  pull_request:
+    branches:
       - main
 
 jobs:
@@ -51,6 +55,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+        with:
+          fetch-depth: 0
+
 
       - name: Maven Build
         run: mvn install
@@ -63,6 +71,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+        with:
+          fetch-depth: 0
 
       - name: Maven Test
         run: mvn test
