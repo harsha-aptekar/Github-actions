@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '45 1 * * *' # Runs every day at midnight
+    - cron: '50 1 * * *' # Runs every day at midnight
 
 jobs:
   build:
