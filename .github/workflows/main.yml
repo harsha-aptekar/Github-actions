@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '50 1 * * *' # Runs every day at midnight
+    - cron: '10 2 * * *' # Runs every day at midnight
 
 permissions:
   contents: read
@@ -43,8 +43,7 @@ jobs:
       - name: Notifiy if build fails
         if: failure()
         run: echo "Build failed! Please check the logs for details."
-        else:
-          run: echo "Build succeeded! Proceeding to testing."
+        
   
 
   Testing:
